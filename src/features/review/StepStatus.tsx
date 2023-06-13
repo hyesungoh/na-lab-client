@@ -1,4 +1,4 @@
-import { css, type Theme, useTheme } from '@emotion/react';
+import { css, type Theme } from '@emotion/react';
 
 import { BODY_2_REGULAR } from '~/styles/typo';
 
@@ -18,8 +18,6 @@ interface Props {
 }
 
 const StepStatus = ({ currentStep, stepLength, notContainSteps }: Props) => {
-  const theme = useTheme();
-
   const { percentage, calculatedCurrentStep, calculatedLength, isCurrentDisabled } = useStepStatus({
     currentStep,
     stepLength,
@@ -27,9 +25,9 @@ const StepStatus = ({ currentStep, stepLength, notContainSteps }: Props) => {
   });
 
   return (
-    <div css={wrapperCss(theme, isCurrentDisabled)}>
+    <div css={wrapperCss(isCurrentDisabled)}>
       <div css={stepBackgroundCss}>
-        <div css={stepBarCss(theme, percentage)} />
+        <div css={stepBarCss(percentage)} />
       </div>
 
       <span css={statusCss}>
@@ -52,21 +50,22 @@ const useStepStatus = ({ currentStep, stepLength, notContainSteps }: Props) => {
   return { percentage, calculatedCurrentStep, calculatedLength, isCurrentDisabled };
 };
 
-const wrapperCss = (theme: Theme, isCurrentDisabled: boolean) => css`
-  position: fixed;
-  z-index: ${theme.zIndex.fixed};
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+const wrapperCss = (isCurrentDisabled: boolean) => (theme: Theme) =>
+  css`
+    position: fixed;
+    z-index: ${theme.zIndex.fixed};
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
 
-  width: 100%;
-  max-width: ${theme.size.maxWidth};
-  margin: 0 auto;
+    width: 100%;
+    max-width: ${theme.size.maxWidth};
+    margin: 0 auto;
 
-  opacity: ${isCurrentDisabled ? 0 : 1};
+    opacity: ${isCurrentDisabled ? 0 : 1};
 
-  transition: opacity 0.3s ${theme.transition.defaultEasing};
-`;
+    transition: opacity 0.3s ${theme.transition.defaultEasing};
+  `;
 
 const stepBackgroundCss = (theme: Theme) => css`
   position: relative;
@@ -75,18 +74,19 @@ const stepBackgroundCss = (theme: Theme) => css`
   background-color: ${theme.colors.gray_50};
 `;
 
-const stepBarCss = (theme: Theme, widthPercentage: number) => css`
-  position: absolute;
-  top: 0;
-  left: 0;
+const stepBarCss = (widthPercentage: number) => (theme: Theme) =>
+  css`
+    position: absolute;
+    top: 0;
+    left: 0;
 
-  width: ${widthPercentage}%;
-  height: 100%;
+    width: ${widthPercentage}%;
+    height: 100%;
 
-  background-color: ${theme.colors.primary_200};
+    background-color: ${theme.colors.primary_200};
 
-  transition: width 0.2s ${theme.transition.defaultEasing};
-`;
+    transition: width 0.2s ${theme.transition.defaultEasing};
+  `;
 
 const statusCss = (theme: Theme) => css`
   ${BODY_2_REGULAR}
