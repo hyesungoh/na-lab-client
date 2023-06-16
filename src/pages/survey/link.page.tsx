@@ -4,19 +4,29 @@ import { m } from 'framer-motion';
 
 import CTAButton from '~/components/button/CTAButton';
 import LinkIcon from '~/components/icons/LinkIcon';
+import SEO from '~/components/SEO/SEO';
 import StaggerWrapper from '~/components/stagger/StaggerWrapper';
 import Toast from '~/components/toast/Toast';
 import useToast from '~/components/toast/useToast';
 import { fixedBottomCss } from '~/features/review/style';
 import { CTAVariants, fixedContainerCss } from '~/features/survey/styles';
+import useInternalRouter from '~/hooks/router/useInternalRouter';
 import { copyToClipBoard } from '~/utils/clipboard';
 
 const SurveyLinkPage = () => {
   const { fireToast } = useToast();
+  const {
+    query: { id },
+  } = useInternalRouter();
 
   const onNext = () => {
-    // TODO : 나의 질문 폼 링크 생성 후 교체
-    copyToClipBoard(window.location.href);
+    if (!id) {
+      throw new Error('잘못된 경로입니다.\nsurveyId가 없습니다.');
+    }
+    const hostUrl = window.location.host;
+    const copyUrl = `${hostUrl}/review?id=${id}`;
+
+    copyToClipBoard(copyUrl);
 
     fireToast({
       content: (
@@ -30,26 +40,30 @@ const SurveyLinkPage = () => {
   };
 
   return (
-    <main css={mainCss}>
-      <picture css={pictureCss}>
-        <source srcSet="/images/survey/link-guide.webp" type="image/webp" />
-        <Image src="/images/survey/link-guide.png" alt="링크 공유 안내" fill />
-      </picture>
+    <>
+      <SEO />
 
-      <StaggerWrapper wrapperOverrideCss={fixedContainerCss(25)}>
-        <p>아래 공유하기 버튼을 눌러</p>
-        <p>
-          <strong>나의 질문 폼 링크</strong>를 복사하세요!
-        </p>
-      </StaggerWrapper>
+      <main css={mainCss}>
+        <picture css={pictureCss}>
+          <source srcSet="/images/survey/link-guide.webp" type="image/webp" />
+          <Image src="/images/survey/link-guide.png" alt="링크 공유 안내" fill />
+        </picture>
 
-      {/* TODO : 카카오 회원가입 버튼 스타일 변경  */}
-      <m.div css={fixedBottomCss} variants={CTAVariants} initial="initial" animate="animate" exit="exit">
-        <CTAButton color="blue" onClick={onNext}>
-          공유하기
-        </CTAButton>
-      </m.div>
-    </main>
+        <StaggerWrapper wrapperOverrideCss={fixedContainerCss(25)}>
+          <p>아래 공유하기 버튼을 눌러</p>
+          <p>
+            <strong>나의 질문 폼 링크</strong>를 복사하세요!
+          </p>
+        </StaggerWrapper>
+
+        {/* TODO : 카카오 회원가입 버튼 스타일 변경  */}
+        <m.div css={fixedBottomCss} variants={CTAVariants} initial="initial" animate="animate" exit="exit">
+          <CTAButton color="blue" onClick={onNext}>
+            공유하기
+          </CTAButton>
+        </m.div>
+      </main>
+    </>
   );
 };
 

@@ -4,6 +4,7 @@ import { useAtom, useAtomValue } from 'jotai';
 
 import CTAButton from '~/components/button/CTAButton';
 import Header from '~/components/header/Header';
+import SEO from '~/components/SEO/SEO';
 import { LOCAL_STORAGE_KEY } from '~/constants/storage';
 import CreateStopDialog from '~/features/survey/addSurveyForm/CreateStopDialog';
 import { REQUEST_BASIC_QUESTION_LIST } from '~/features/survey/constants';
@@ -11,7 +12,7 @@ import CreateDialog from '~/features/survey/CreateDialog';
 import CreateSurvey from '~/features/survey/CreateSurvey';
 import { fixedBottomCss } from '~/features/survey/styles';
 import { type CustomQuestionItem, type QuestionRequest } from '~/features/survey/types';
-import useCreateSurvey from '~/hooks/api/surveys/useCreateSurvey';
+import useCreateSurveyAction from '~/features/survey/useCreateSurvey';
 import useBoolean from '~/hooks/common/useBoolean';
 import useDidUpdate from '~/hooks/lifeCycle/useDidUpdate';
 import useInternalRouter from '~/hooks/router/useInternalRouter';
@@ -22,7 +23,6 @@ import { BODY_1 } from '~/styles/typo';
 
 const CreateSurveyPage = () => {
   const { status } = useSession();
-  const { mutate: createSurvey } = useCreateSurvey();
 
   const router = useInternalRouter();
   const [, setCreateSurveyRequest] = useLocalStorage<QuestionRequest[]>(
@@ -36,6 +36,7 @@ const CreateSurveyPage = () => {
   const [isDialogOpen, , onDialogOpen, onDialogClose] = useBoolean(false);
   const [isDialogShowing, toggleDialogShowing] = useBoolean(false);
 
+  const { onCreate } = useCreateSurveyAction();
   const isCustomItemsEmpty = customItems.length === 0;
 
   const onStop = () => {
@@ -45,21 +46,10 @@ const CreateSurveyPage = () => {
 
   const onSubmit = async () => {
     const data = getCreateSurveyRequestData(customItems);
-    // TODO : 추후 atom을 CreateSurveyRequest 타입으로 변경 예정입니다. 지금도 문제 없음
     setCreateSurveyRequest(data);
 
     if (status === 'authenticated') {
-      await createSurvey(
-        { question: data, question_count: data.length },
-        {
-          onSuccess: ({ survey_id }) => {
-            // TODO: 서베이 아이디 저장해서 /survey/link에서 사용
-            console.warn(survey_id);
-            router.push('/survey/link');
-            // TODO: 생성에 쓰인 로컬스토리지 값 비우기
-          },
-        },
-      );
+      onCreate();
     } else {
       router.push('/survey/join');
     }
@@ -70,32 +60,36 @@ const CreateSurveyPage = () => {
   }, [customItems.length]);
 
   return (
-    <main css={containerCss}>
-      <Header
-        title="나의 질문폼"
-        onBackClick={onDialogOpen}
-        rightButton={
-          <button
-            disabled={isCustomItemsEmpty}
-            css={(theme) => deleteButtonCss(isDeleteMode, theme)}
-            type="button"
-            onClick={() => setIsDeleteMode(!isDeleteMode)}
-          >
-            {isDeleteMode ? '완료' : '삭제하기'}
-          </button>
-        }
-      />
-      <CreateSurvey />
+    <>
+      <SEO />
 
-      <section css={fixedBottomCss}>
-        <CTAButton onClick={toggleDialogShowing} color="blue" disabled={isDeleteMode}>
-          이대로 생성하기
-        </CTAButton>
-      </section>
+      <main css={containerCss}>
+        <Header
+          title="나의 질문폼"
+          onBackClick={onDialogOpen}
+          rightButton={
+            <button
+              disabled={isCustomItemsEmpty}
+              css={(theme) => deleteButtonCss(isDeleteMode, theme)}
+              type="button"
+              onClick={() => setIsDeleteMode(!isDeleteMode)}
+            >
+              {isDeleteMode ? '완료' : '삭제하기'}
+            </button>
+          }
+        />
+        <CreateSurvey />
 
-      <CreateDialog isShowing={isDialogShowing} onClose={toggleDialogShowing} onAction={onSubmit} />
-      <CreateStopDialog isShowing={isDialogOpen} onClose={onDialogClose} onAction={onStop} />
-    </main>
+        <section css={fixedBottomCss}>
+          <CTAButton onClick={toggleDialogShowing} color="blue" disabled={isDeleteMode}>
+            이대로 생성하기
+          </CTAButton>
+        </section>
+
+        <CreateDialog isShowing={isDialogShowing} onClose={toggleDialogShowing} onAction={onSubmit} />
+        <CreateStopDialog isShowing={isDialogOpen} onClose={onDialogClose} onAction={onStop} />
+      </main>
+    </>
   );
 };
 
